@@ -6,7 +6,7 @@ Item {
     Column{
         width: parent.width
         height: parent.height
-        spacing: 2
+        spacing: 10
     
         Pane {
             width: parent.width
@@ -144,16 +144,19 @@ Item {
             ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
             Grid {
+                id: deviceGrid
                 width: parent.parent.width
                 columns: Math.max(1, Math.floor(width / 362)) // 352 + 10 for spacing
                 spacing: 10
+
+                property int itemWidth: (width - (columns - 1) * spacing) / columns
 
                 Repeater{
                     model: service.controllers
 
                     delegate: Pane {
                         id: root
-                        width: 352 // set Width
+                        width: deviceGrid.itemWidth
                         height: (contentHeight + padding * 2) + 30// dynamic height based on content
                         padding: 12
 
@@ -171,11 +174,14 @@ Item {
                             spacing: 4
 
                             Item{
+                                Layout.fillWidth: true
                                 height: 80
 
                                 Image {
-                                    x: 10
-                                    y: 0
+                                    id: deviceImage
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: 10
+                                    anchors.verticalCenter: parent.verticalCenter
                                     width: 120
                                     height: 120
                                     source: root.device.deviceImage
@@ -183,67 +189,90 @@ Item {
                                     mipmap: false
                                 }
 
-                                Text{
-                                    x: 140
-                                    y: 0
-                                    id: deviceName
-                                    color: theme.primarytextcolor
-                                    text: root.device.name
-                                    font.pixelSize: 18
-                                    font.family: theme.primaryfont
-                                    font.weight: Font.Bold
-                                    verticalAlignment: Text.AlignVCenter
-                                }
+                                Item {
+                                    id: textContainer
+                                    anchors.left: deviceImage.right
+                                    anchors.leftMargin: 10
+                                    anchors.right: parent.right
+                                    anchors.rightMargin: 10
+                                    anchors.top: parent.top
+                                    height: 80
 
-                                Text{
-                                    x: 140
-                                    y: 26
-                                    font.pixelSize: 12
-                                    font.family: "Montserrat Regular"
-                                    verticalAlignment: Text.AlignVCenter
-                                    color: theme.secondarytextcolor
-                                    text: `ID: ${root.device.id}`
-                                }
+                                    Text{
+                                        y: 0
+                                        id: deviceName
+                                        anchors.left: parent.left
+                                        anchors.right: removeButton.left
+                                        anchors.rightMargin: 10
+                                        color: theme.primarytextcolor
+                                        text: root.device.name
+                                        font.pixelSize: 18
+                                        font.family: theme.primaryfont
+                                        font.weight: Font.Bold
+                                        verticalAlignment: Text.AlignVCenter
+                                        elide: Text.ElideRight
+                                    }
 
-                                Text{
-                                    x: 140
-                                    y: 42
-                                    font.pixelSize: 12
-                                    font.family: "Montserrat Regular"
-                                    verticalAlignment: Text.AlignVCenter
-                                    color: theme.secondarytextcolor
-                                    text: `Model: ${root.device.sku}`
-                                }
+                                    Text{
+                                        y: 26
+                                        anchors.left: parent.left
+                                        anchors.right: removeButton.left
+                                        anchors.rightMargin: 10
+                                        font.pixelSize: 12
+                                        font.family: "Montserrat Regular"
+                                        verticalAlignment: Text.AlignVCenter
+                                        color: theme.secondarytextcolor
+                                        text: `ID: ${root.device.id}`
+                                        elide: Text.ElideRight
+                                    }
 
-                                Text{
-                                    x: 140
-                                    y: 58
-                                    font.pixelSize: 12
-                                    font.family: "Montserrat Regular"
-                                    verticalAlignment: Text.AlignVCenter
-                                    color: theme.secondarytextcolor
-                                    text: "IP Address: " + root.device.ip ?? "Unknown"
-                                }
+                                    Text{
+                                        y: 42
+                                        anchors.left: parent.left
+                                        anchors.right: removeButton.left
+                                        anchors.rightMargin: 10
+                                        font.pixelSize: 12
+                                        font.family: "Montserrat Regular"
+                                        verticalAlignment: Text.AlignVCenter
+                                        color: theme.secondarytextcolor
+                                        text: `Model: ${root.device.sku}`
+                                        elide: Text.ElideRight
+                                    }
 
-                                SIconButton{
-                                    x: 300
-                                    y: 0
-                                    id: removeButton
-                                    width: 24
-                                    height: 24
-                                    iconSize: height
-                                    
-                                    icon.source: "qrc:/icons/Resources/Icons/Material/close_white_48dp.svg"
+                                    Text{
+                                        y: 58
+                                        anchors.left: parent.left
+                                        anchors.right: removeButton.left
+                                        anchors.rightMargin: 10
+                                        font.pixelSize: 12
+                                        font.family: "Montserrat Regular"
+                                        verticalAlignment: Text.AlignVCenter
+                                        color: theme.secondarytextcolor
+                                        text: "IP Address: " + root.device.ip ?? "Unknown"
+                                        elide: Text.ElideRight
+                                    }
 
-                                    onClicked: {
-                                        discovery.remove(root.device);
+                                    SIconButton{
+                                        id: removeButton
+                                        anchors.right: parent.right
+                                        anchors.top: parent.top
+                                        width: 24
+                                        height: 24
+                                        iconSize: height
+
+                                        icon.source: "qrc:/icons/Resources/Icons/Material/close_white_48dp.svg"
+
+                                        onClicked: {
+                                            discovery.remove(root.device);
+                                        }
                                     }
                                 }
 
                                 SButton {
                                     id: deviceLink
-                                    x: 140
-                                    y: 80
+                                    anchors.left: deviceImage.right
+                                    anchors.leftMargin: 10
+                                    anchors.top: textContainer.bottom
 
                                     color: (root.device.paired === true) ? hovered ? Qt.darker("#394e61", 1.5) : "#394e61" : hovered ? Qt.darker("#5664b1", 1.5) : "#5664b1"
 
@@ -252,9 +281,9 @@ Item {
                                     label.font.family: "Red Hat Display"
                                     label.font.bold: true
 
-                                    width: 190
+                                    width: Math.min(210, textContainer.width + 10)
                                     height: 32
-        
+
                                     onClicked: {
                                         if(root.device.paired === true){
                                             discovery.unlink(root.device);

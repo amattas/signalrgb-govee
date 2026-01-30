@@ -197,6 +197,13 @@ export function DiscoveryService() {
 			//service.log(value);
 			this.CreateControllerDevice(value);
 
+		  }else if (this.cache.Has(value.id) && value.ip !== this.cache.Get(value.id).ip) {
+			service.log(`Updating Govee device found at ${value.ip}`);
+			const cachedController = this.cache.Get(value.id);
+			const controller = service.getController(cachedController.id);
+			if(controller) {
+				controller.updateWithValue(value);
+			}
 		}
 	};
 
@@ -205,7 +212,7 @@ export function DiscoveryService() {
 		console.log(value)
 		
 		// Check if the device is already in the cache before doing any work
-		if(!this.cache.Has(value.id)) {
+		if(!this.cache.Has(value.id)){
 
 			const response	= JSON.parse(value.response);
 
@@ -226,10 +233,14 @@ export function DiscoveryService() {
 			}
 
 			service.log(`Govee device ${response.msg.data.sku} discovered!`);
-			service.log(value);
 			this.CreateControllerDevice(value);
-		} else {
-			console.log(value)
+		}else if (this.cache.Has(value.id) && value.ip !== this.cache.Get(value.id).ip) {
+			service.log(`Updating Govee device found at ${value.ip}`);
+			const cachedController = this.cache.Get(value.id);
+			const controller = service.getController(cachedController.id);
+			if(controller) {
+				controller.updateWithValue(value);
+			}
 		}
 	};
 
