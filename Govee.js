@@ -201,7 +201,7 @@ export function DiscoveryService() {
 			//service.log(value);
 			this.CreateControllerDevice(value);
 
-		  }else if (this.cache.Has(value.id) && value.ip !== this.cache.Get(value.id).ip) {
+		}else if (this.cache.Has(value.id) && value.ip !== this.cache.Get(value.id).ip) {
 			service.log(`Updating Govee device found at ${value.ip}`);
 			const cachedController = this.cache.Get(value.id);
 			const controller = service.getController(cachedController.id);
