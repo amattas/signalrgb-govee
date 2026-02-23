@@ -1556,4 +1556,13 @@ const GoveeDeviceLibrary = {
 		supportDreamView: true,
 		ledCount: 20
 	},
+	H619A: {
+		name: "5m RGBIC LED Strip Light with Cover",
+		deviceImage: "https://assets.signalrgb.com/devices/brands/govee/wifi/h619a.png",
+		sku: "H619A",
+		state: 1,
+		supportRazer: true,
+		supportDreamView: true,
+		ledCount: 30
+	},
 };
