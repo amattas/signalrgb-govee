@@ -174,7 +174,7 @@ export function DiscoveryService() {
 
 	this.Discovered = function(value) {
 
-		console.log(value)
+		//console.log(value)
 
 		// Check if the device is already in the cache before doing any work
 		if(!this.cache.Has(value.id)){
