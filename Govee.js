@@ -715,8 +715,6 @@ class UdpSocketServer{
 			this.log("Defining new UDP Socket so we can send data.");
 		}
 
-		console.log("Sending: " + packet)
-
 		this.server.send(packet);
 	}
 
