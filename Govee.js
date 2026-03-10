@@ -8,16 +8,19 @@ export function SubdeviceController() { return true; }
 /* global
 controller:readonly
 discovery: readonly
-TurnOffOnShutdown:readonly
+shutdownColor:readonly
 LightingMode:readonly
 forcedColor:readonly
+TurnOffOnShutdown:readonly
+protocolSelect:readonly
 */
 export function ControllableParameters() {
 	return [
-		{property:"protocolSelect", group:"settings", label:"Protocol", description: "Determines which protocol will be used to control the device. (Not all protocols works on a device)", type:"combobox", values:["DreamviewV1", "DreamviewV2", "RazerV1", "RazerV2", "Static"], default:"DreamviewV1"},
-		{property:"TurnOffOnShutdown", group:"settings", label:"Turn off on unlink process", description: "This turns off the device during the unlink/disabling of the device process or shutdown of the app", type:"boolean", default:"false"},
+		{property:"shutdownColor", group:"lighting", label:"Shutdown Color", description: "This color is applied to the device when the System, or SignalRGB is shutting down", min:"0", max:"360", type:"color", default:"#000000"},
 		{property:"LightingMode", group:"lighting", label:"Lighting Mode", description: "Determines where the device's RGB comes from. Canvas will pull from the active Effect, while Forced will override it to a specific color", type:"combobox", values:["Canvas", "Forced"], default:"Canvas"},
 		{property:"forcedColor", group:"lighting", label:"Forced Color", description: "The color used when 'Forced' Lighting Mode is enabled", min:"0", max:"360", type:"color", default:"#009bde"},
+		{property:"TurnOffOnShutdown", group:"settings", label:"Turn off on unlink process", description: "This turns off the device during the unlink/disabling of the device process or shutdown of the app", type:"boolean", default:"false"},
+		{property:"protocolSelect", group:"settings", label:"Protocol", description: "Determines which protocol will be used to control the device. (Not all protocols works on a device)", type:"combobox", values:["DreamviewV1", "DreamviewV2", "RazerV1", "RazerV2", "Static"], default:"DreamviewV1"},
 	];
 }
 
