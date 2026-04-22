@@ -175,80 +175,46 @@ export function DiscoveryService() {
 		}));
 	};
 
-	this.Discovered = function(value) {
+	this._handleDiscovery = function(value, forced) {
+		if(forced){
+			console.log(value);
+		}
 
-		//console.log(value)
-
-		// Check if the device is already in the cache before doing any work
 		if(!this.cache.Has(value.id)){
+			const response = JSON.parse(value.response);
 
-			const response	= JSON.parse(value.response);
-
-			// Check if the response packet has the "scan" response from Govee
 			if(response.msg.cmd != "scan"){
 				return;
 			}
 
 			service.log(`Potential Govee device ${response.msg.data.sku} found at ${value.ip}`);
 
-			// Check if the response packet has the ip field in the response from Govee
 			const isValid = response.msg.data.hasOwnProperty("ip");
-
 			if(!isValid){
 				service.log(`Potential Govee device ${response.msg.data.sku} found at ${value.ip} discarded since it's missing an IP field. If this is a Matter device, is not supported yet.`);
-				service.log(response.msg.data)
+				service.log(response.msg.data);
 				return;
 			}
 
 			service.log(`Govee device ${response.msg.data.sku} discovered!`);
-			//service.log(value);
 			this.CreateControllerDevice(value);
 
-		}else if (this.cache.Has(value.id) && value.ip !== this.cache.Get(value.id).ip) {
+		}else if(value.ip !== this.cache.Get(value.id).ip){
 			service.log(`Updating Govee device found at ${value.ip}`);
 			const cachedController = this.cache.Get(value.id);
 			const controller = service.getController(cachedController.id);
-			if(controller) {
+			if(controller){
 				controller.updateWithValue(value);
 			}
 		}
 	};
 
+	this.Discovered = function(value) {
+		this._handleDiscovery(value, false);
+	};
+
 	this.forceDiscovery = function(value) {
-
-		console.log(value)
-		
-		// Check if the device is already in the cache before doing any work
-		if(!this.cache.Has(value.id)){
-
-			const response	= JSON.parse(value.response);
-
-			// Check if the response packet has the "scan" response from Govee
-			if(response.msg.cmd != "scan"){
-				return;
-			}
-
-			service.log(`Potential Govee device ${response.msg.data.sku} found at ${value.ip}`);
-
-			// Check if the response packet has the ip field in the response from Govee
-			const isValid = response.msg.data.hasOwnProperty("ip");
-
-			if(!isValid){
-				service.log(`Potential Govee device ${response.msg.data.sku} found at ${value.ip} discarded since it's missing an IP field. If this is a Matter device, is not supported yet.`);
-				service.log(response.msg.data)
-				return;
-			}
-
-			service.log(`Govee device ${response.msg.data.sku} discovered!`);
-			this.CreateControllerDevice(value);
-		}else if (this.cache.Has(value.id) && value.ip !== this.cache.Get(value.id).ip) {
-			service.log(`Updating Govee device found at ${value.ip}`);
-			const cachedController = this.cache.Get(value.id);
-			const controller = service.getController(cachedController.id);
-			if(controller) {
-				controller.updateWithValue(value);
-			}
-		}
+		this._handleDiscovery(value, true);
 	};
 
 	this.purgeIPCache = function() {
