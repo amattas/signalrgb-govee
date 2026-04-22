@@ -670,7 +670,7 @@ class GoveeProtocol {
 				packet = this.createRazerPacketV1(RGBData);
 				this.SendEncodedPacket(packet);
 				break;
-			case "RazerV1":
+			case "RazerV2":
 				packet = this.createRazerPacketV2(RGBData);
 				this.SendEncodedPacket(packet);
 				break;
