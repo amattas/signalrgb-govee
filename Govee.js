@@ -1564,4 +1564,31 @@ const GoveeDeviceLibrary = {
 			{ name: "IC20", ledCount: 20, size: [1, 20], ledNames: ["Led 1","Led 2","Led 3","Led 4","Led 5","Led 6","Led 7","Led 8","Led 9","Led 10","Led 11","Led 12","Led 13","Led 14","Led 15","Led 16","Led 17","Led 18","Led 19","Led 20"], ledPositions: [[0,0],[0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[0,7],[0,8],[0,9],[0,10],[0,11],[0,12],[0,13],[0,14],[0,15],[0,16],[0,17],[0,18],[0,19]] },
 		]
 	},
+	H706A: {
+		name: "Permanent Outdoor Lights Pro (100ft, 60 LED)",
+		deviceImage: "https://assets.signalrgb.com/devices/brands/govee/wifi/h706a.png",
+		sku: "H706A",
+		state: 1,
+		supportRazer: true,
+		supportDreamView: true,
+		ledCount: 60
+	},
+	H706B: {
+		name: "Permanent Outdoor Lights Pro (150ft, 90 LED)",
+		deviceImage: "https://assets.signalrgb.com/devices/brands/govee/wifi/h706a.png",
+		sku: "H706B",
+		state: 1,
+		supportRazer: true,
+		supportDreamView: true,
+		ledCount: 90
+	},
+	H706C: {
+		name: "Permanent Outdoor Lights Pro (200ft, 108 LED)",
+		deviceImage: "https://assets.signalrgb.com/devices/brands/govee/wifi/h706a.png",
+		sku: "H706C",
+		state: 1,
+		supportRazer: true,
+		supportDreamView: true,
+		ledCount: 108
+	},
 };
