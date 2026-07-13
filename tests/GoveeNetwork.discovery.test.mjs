@@ -235,9 +235,10 @@ test("raw SignalRGB UDP packets are normalized before discovery handling", () =>
 	assert.ok(runtime.context.service.logs.some(value => String(value).includes("Govee discovery response received from 10.4.28.131:55213")));
 });
 
-test("framework discovery wrappers retain identity through controller creation", () => {
+test("framework discovery wrappers derive missing metadata and reuse the parsed response", () => {
 	const runtime = loadPlugin();
 	const discovery = new runtime.DiscoveryService();
+	runtime.context.discovery = discovery;
 	const packet = {
 		response: JSON.stringify({
 			msg: {
@@ -245,16 +246,25 @@ test("framework discovery wrappers retain identity through controller creation",
 				data: { ip: "10.4.28.131", device: "device-id", sku: "H6047" },
 			},
 		}),
-		ip: "10.4.28.131",
 		port: 54321,
-		id: "device-id",
 	};
+	const createControllerDevice = discovery.CreateControllerDevice;
 	let createdWith;
-	discovery.CreateControllerDevice = value => { createdWith = value; };
+	discovery.CreateControllerDevice = function(value) {
+		createdWith = value;
+		return createControllerDevice.call(this, value);
+	};
 
 	discovery.Discovered(packet);
 
-	assert.strictEqual(createdWith, packet);
+	assert.notStrictEqual(createdWith, packet);
+	assert.equal(createdWith.id, "device-id");
+	assert.equal(createdWith.ip, "10.4.28.131");
+	assert.equal(createdWith.parsedResponse.msg.data.device, "device-id");
+	assert.equal(runtime.getParseCount(), 1);
+	assert.equal(runtime.context.service.addedControllers.length, 1);
+	assert.equal(runtime.context.service.addedControllers[0].id, "device-id");
+	assert.equal(discovery.cache.Has("device-id"), true);
 });
 
 test("malformed discovery packets are ignored with a diagnostic", () => {

@@ -278,11 +278,12 @@ export function DiscoveryService() {
 		}
 
 		const responseData = response?.msg?.data;
-		const normalizedValue = value?.parsedResponse === undefined ? value : Object.assign({}, value, {
+		const normalizedValue = value?.parsedResponse === undefined ? Object.assign({}, value, {
 			response: responseText,
 			ip: value?.ip ?? value?.address ?? responseData?.ip,
 			id: value?.id ?? responseData?.device,
-		});
+			parsedResponse: response,
+		}) : value;
 		if(response?.msg?.cmd !== "scan"){
 			service.log(`Ignoring Govee discovery packet with command: ${response?.msg?.cmd}`);
 			return;
@@ -453,10 +454,10 @@ class GoveeController{
 
 		let response;
 
-			// Handle discovery or cached device
-			if (value.response) {
-				const packet = value.parsedResponse?.msg ?? JSON.parse(value.response).msg;
-				response = packet.data;
+		// Handle discovery or cached device
+		if (value.response) {
+			const packet = value.parsedResponse?.msg ?? JSON.parse(value.response).msg;
+			response = packet.data;
 		} else {
 			response = value
 		}
