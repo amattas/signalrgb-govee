@@ -23,6 +23,10 @@ Compared to upstream `gitlab.com/signalrgb/Govee main` as of April 2026:
 - **Bug fix: device discovery handlers deduplicated.** `Discovered` and
   `forceDiscovery` had byte-identical bodies; they now share a single
   `_handleDiscovery` implementation so future fixes only need to be applied once.
+- **Bug fix: cross-subnet `Check IP` discovery works reliably** with Govee's
+  fixed UDP reply port and SignalRGB's raw UDP packet format.
+- **Bug fix: H6047 Gaming Light Bars expose separate left/right bars** with
+  five correctly oriented zones each.
 - **Additional SKUs** that have been asked for in forum threads but not yet
   upstreamed:
   - H70BC — Netflix Curtain Lights (20 IC subdevices × 20 LEDs, 400 total)
@@ -48,7 +52,6 @@ new SKUs. Subsequent releases will layer on:
   two identical strips shows up" bug.
 - **v2.1.1** — `devices.override.json` sidecar so hand-edited device entries
   survive plugin reinstall.
-- **v2.1.2** — Cross-subnet / unicast scan fallback for VLAN-segmented networks.
 - **v2.1.3** — Idle-color-when-paused; Razer-mode keepalive heartbeat (prevents
   the ~60 s Razer-mode dropout).
 - **v2.1.4** — Diagnostic log toggle.
@@ -88,8 +91,12 @@ from SignalRGB's marketplace.
   name makes SignalRGB treat this as an override of that addon rather than
   as a standalone plugin.
 - **Device not discovered** — verify LAN Control is enabled in the Govee Home
-  app, reserve a static IP for the device in your router, and try the
-  "Cache Device" button in the plugin settings with the device's IP typed in.
+  app and reserve a static IP for the device in your router. Automatic
+  multicast discovery requires multicast routing; mDNS reflection alone does
+  not forward Govee's `239.255.255.250:4001` discovery traffic. **Check IP**
+  uses unicast and requires the firewall to allow SignalRGB PC -> Govee UDP
+  destination ports `4001` and `4003`, plus Govee -> SignalRGB PC UDP
+  destination port `4002` from any source port.
 - **RazerV2 doesn't work** — if colors look shifted or the wrong LEDs light up,
   switch to DreamviewV2 in the `Protocol` dropdown. `RazerV2` is the protocol
   most affected by the byte-count field ambiguity (see project plan bug B4a).

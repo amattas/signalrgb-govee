@@ -6,6 +6,23 @@ All notable changes to this plugin are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+- **Cross-subnet Check IP discovery.** The plugin now owns one unconnected UDP
+  `4002` listener and sends manual scans to device UDP `4001`, matching Govee's
+  fixed reply-port behavior. Replies from arbitrary device source ports are
+  accepted without competing with a SignalRGB-managed listener.
+- **Raw UDP discovery responses.** SignalRGB socket callbacks provide packet
+  JSON in `msg.data`, unlike framework discovery callbacks that use
+  `value.response`. Both shapes are normalized before controller creation,
+  with device ID and IP derived from the scan payload when necessary.
+- **SignalRGB JavaScript compatibility.** Packet normalization avoids object
+  spread syntax unsupported by SignalRGB's embedded JavaScript engine, which
+  previously caused the plugin to disappear from the device list.
+- **H6047 dual-bar layout.** Gaming Light Bars now appear as separate vertical
+  `Left Light Bar` and `Right Light Bar` subdevices with five independently
+  sampled zones each. Protocol zones are mapped bottom-to-top to match the
+  physical hardware orientation; the non-addressed logo LED is omitted.
+
 ### Planned — v2.0.0-beta
 - Port [WIZ Network Plugin](https://github.com/RobThePCGuy/SignalRGB-WIZ-Network-Plugin)'s
   device-health tracking: `lastRespondedAt` on each controller, green/red status
@@ -18,7 +35,6 @@ All notable changes to this plugin are documented here. The format follows
   device-unique id from the scan response, not by SKU).
 - `devices.override.json` sidecar so hand-edited device entries survive
   plugin reinstall.
-- Cross-subnet / unicast scan fallback (CIDR input).
 - Idle color / idle behavior when SignalRGB pauses.
 - Razer-mode keepalive heartbeat to prevent the community-documented
   ~60-second Razer-mode dropout.

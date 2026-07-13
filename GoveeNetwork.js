@@ -156,25 +156,71 @@ function hexToRgb(hex){
 
 // -------------------------------------------<( Discovery Service )>--------------------------------------------------
 let UDPServer;
+let DiscoveryUDPServer;
+const GoveeScanRequest = JSON.stringify({
+	msg: { cmd: "scan", data: { account_topic: "reserve" } },
+});
+
+function isValidIPv4(value){
+	if(typeof value !== "string") return false;
+	const parts = value.split(".");
+	return parts.length === 4 && parts.every(part => {
+		if(!/^\d{1,3}$/.test(part)) return false;
+		const number = Number(part);
+		return number >= 0 && number <= 255;
+	});
+}
 
 export function DiscoveryService() {
 	this.IconUrl = "https://assets.signalrgb.com/brands/govee/logo.png";
 	this.firstRun = true;
 
+	this._normalizeDiscoveryValue = function(value){
+		if(typeof value?.response === "string"){
+			service.log(`Govee discovery response received from ${value.ip ?? "unknown"}:${value.port ?? "unknown"}`);
+			return value;
+		}
+
+		const responseText = value?.data;
+		let response;
+		try{
+			response = JSON.parse(responseText);
+		}catch(error){
+			return Object.assign({}, value, {response: responseText});
+		}
+
+		const responseData = response?.msg?.data;
+		const normalizedValue = Object.assign({}, value, {
+			response: responseText,
+			ip: value?.ip ?? value?.address ?? responseData?.ip,
+			id: value?.id ?? responseData?.device,
+			parsedResponse: response,
+		});
+		service.log(`Govee discovery response received from ${normalizedValue.ip ?? "unknown"}:${normalizedValue.port ?? "unknown"}`);
+		return normalizedValue;
+	};
+
 	this.Initialize = function(){
 		service.log("Searching for Govee network devices...");
+		if(DiscoveryUDPServer === undefined){
+			DiscoveryUDPServer = new UdpSocketServer({
+				listenPort: 4002,
+				connectOnStart: false,
+				isDiscoveryServer: true,
+			});
+			DiscoveryUDPServer.setCallbackFunction(value => this.forceDiscovery(this._normalizeDiscoveryValue(value)));
+			DiscoveryUDPServer.start();
+		}
 	};
 
 	this.UdpBroadcastPort = 4001;
-	this.UdpListenPort = 4002;
+	this.UdpListenPort = 0;
 	this.UdpBroadcastAddress = "239.255.255.250";
 
 	this.lastPollTime = 0;
 	this.PollInterval = 60000;
 
 	this.cache = new IPCache();
-	this.activeSockets = new Map();
-	this.activeSocketTimer = Date.now();
 
 	this.LoadCachedDevices = function(){
 		service.log("Loading Cached Devices...");
@@ -191,36 +237,22 @@ export function DiscoveryService() {
 		}
 	};
 
-	this.checkCachedDevice = function(ipAddress) {
-		service.log(`Checking IP: ${ipAddress}`);
-
-		if(UDPServer !== undefined) {
-			UDPServer.stop();
-			UDPServer = undefined;
+	this.checkCachedDevice = function(ipAddress){
+		if(!isValidIPv4(ipAddress)){
+			service.log(`Invalid Govee IPv4 address: ${ipAddress}`);
+			return false;
 		}
-
-		const socketServer = new UdpSocketServer({
-			ip : ipAddress,
-			isDiscoveryServer : true
-		});
-
-		this.activeSockets.set(ipAddress, socketServer);
-		this.activeSocketTimer = Date.now();
-		socketServer.start();
-	};
-
-	this.clearSockets = function() {
-		if(Date.now() - this.activeSocketTimer > 10000 && this.activeSockets.size > 0) {
-			service.log("Nuking Active Cache Sockets.");
-
-			for(const [key, value] of this.activeSockets.entries()){
-				service.log(`Nuking Socket for IP: [${key}]`);
-				value.stop();
-				this.activeSockets.delete(key);
-				//Clear would be more efficient here, however it doesn't kill the socket instantly.
-				//We instead would be at the mercy of the GC.
-			}
+		if(DiscoveryUDPServer === undefined){
+			service.log("Govee discovery listener is not initialized.");
+			return false;
 		}
+		service.log(`Sending Govee unicast scan to ${ipAddress}:4001`);
+		const bytesWritten = DiscoveryUDPServer.write(GoveeScanRequest, ipAddress, 4001);
+		if(bytesWritten === -1){
+			service.log(`Failed to send Govee unicast scan to ${ipAddress}:4001`);
+			return false;
+		}
+		return true;
 	};
 
 	this.CheckForDevices = function(){
@@ -230,46 +262,52 @@ export function DiscoveryService() {
 
 		discovery.lastPollTime = Date.now();
 		service.log("Broadcasting device scan...");
-		service.broadcast(JSON.stringify({
-			msg: {
-				cmd: "scan",
-				data: {
-					account_topic: "reserve",
-				},
-			}
-		}));
+		service.broadcast(GoveeScanRequest);
 	};
 
 	this._handleDiscovery = function(value, forced) {
-		if(forced){
-			console.log(value);
+		let response = value?.parsedResponse;
+		const responseText = value?.response ?? value?.data;
+		if(response === undefined){
+			try{
+				response = JSON.parse(responseText);
+			}catch(error){
+				service.log(`Malformed Govee discovery packet: ${error.message}`);
+				return;
+			}
 		}
 
-		if(!this.cache.Has(value.id)){
-			const response = JSON.parse(value.response);
+		const responseData = response?.msg?.data;
+		const normalizedValue = value?.parsedResponse === undefined ? value : Object.assign({}, value, {
+			response: responseText,
+			ip: value?.ip ?? value?.address ?? responseData?.ip,
+			id: value?.id ?? responseData?.device,
+		});
+		if(response?.msg?.cmd !== "scan"){
+			service.log(`Ignoring Govee discovery packet with command: ${response?.msg?.cmd}`);
+			return;
+		}
 
-			if(response.msg.cmd != "scan"){
-				return;
+		if(!responseData?.ip){
+			service.log(`Potential Govee device ${responseData?.sku} discarded since it's missing an IP field. If this is a Matter device, is not supported yet.`);
+			if(responseData !== undefined){
+				service.log(responseData);
 			}
+			return;
+		}
 
-			service.log(`Potential Govee device ${response.msg.data.sku} found at ${value.ip}`);
+		if(!this.cache.Has(normalizedValue.id)){
+			service.log(`Potential Govee device ${responseData.sku} found at ${responseData.ip}`);
 
-			const isValid = response.msg.data.hasOwnProperty("ip");
-			if(!isValid){
-				service.log(`Potential Govee device ${response.msg.data.sku} found at ${value.ip} discarded since it's missing an IP field. If this is a Matter device, is not supported yet.`);
-				service.log(response.msg.data);
-				return;
-			}
+			service.log(`Govee device ${responseData.sku} discovered!`);
+			this.CreateControllerDevice(normalizedValue);
 
-			service.log(`Govee device ${response.msg.data.sku} discovered!`);
-			this.CreateControllerDevice(value);
-
-		}else if(value.ip !== this.cache.Get(value.id).ip){
-			service.log(`Updating Govee device found at ${value.ip}`);
-			const cachedController = this.cache.Get(value.id);
+		}else if(normalizedValue.ip !== this.cache.Get(normalizedValue.id).ip){
+			service.log(`Updating Govee device found at ${normalizedValue.ip}`);
+			const cachedController = this.cache.Get(normalizedValue.id);
 			const controller = service.getController(cachedController.id);
 			if(controller){
-				controller.updateWithValue(value);
+				controller.updateWithValue(normalizedValue);
 			}
 		}
 	};
@@ -297,28 +335,20 @@ export function DiscoveryService() {
 			cont.obj.update();
 		}
 
-		this.clearSockets();
 		this.CheckForDevices();
 	};
 
-	this.getSocket = function(key) {
-		return this.activeSockets.get(key);
-	};
-
 	this.Shutdown = function(){
-
+		if(DiscoveryUDPServer !== undefined){
+			DiscoveryUDPServer.stop();
+			DiscoveryUDPServer = undefined;
+			service.log("Govee discovery listener stopped.");
+		}
 	};
 
 	this.remove = function(controllerObj = false){
 
 		if (controllerObj) {
-			service.log(`Stopping TCP Socket for ${controllerObj.ip}`);
-			const udpSocket = this.getSocket(controllerObj.ip);
-			if(udpSocket){
-				udpSocket.stop();
-				this.activeSockets.delete(controllerObj.ip);
-			}
-
 			service.log(`Removing from cache: ${controllerObj.id}`);
 			this.cache.Remove(controllerObj.id)
 			
@@ -381,13 +411,6 @@ export function DiscoveryService() {
 	this.unlink = function(controllerObj) {
 		service.log(`Unlinking controller: ${JSON.stringify(controllerObj)}`);
 
-		service.log(`Stopping TCP Socket for ${controllerObj.id}`);
-		const tcpSocket = this.getSocket(controllerObj.id);
-		if(tcpSocket){
-			tcpSocket.stop();
-			this.activeSockets.delete(controllerObj.id);
-		}
-
 		const cachedController = this.cache.Get(controllerObj.id)
 		const controller = service.getController(cachedController.id);
 
@@ -430,10 +453,10 @@ class GoveeController{
 
 		let response;
 
-		// Handle discovery or cached device
-		if (value.response) {
-			const packet = JSON.parse(value.response).msg;
-			response = packet.data;
+			// Handle discovery or cached device
+			if (value.response) {
+				const packet = value.parsedResponse?.msg ?? JSON.parse(value.response).msg;
+				response = packet.data;
 		} else {
 			response = value
 		}
@@ -498,7 +521,7 @@ class GoveeController{
 
 		// Handle discovery or cached device
 		if (value.response) {
-			response = JSON.parse(value.response).msg.data;
+			response = value.parsedResponse?.msg?.data ?? JSON.parse(value.response).msg.data;
 		} else {
 			response = value
 		}
@@ -729,6 +752,7 @@ class UdpSocketServer{
 		this.broadcastPort = args?.broadcastPort ?? 4001;
 		this.ipToConnectTo = args?.ip ?? "239.255.255.250";
 		this.isDiscoveryServer = args?.isDiscoveryServer ?? false;
+		this.connectOnStart = args?.connectOnStart ?? true;
 
 		this.log = (msg) => { this.isDiscoveryServer ? service.log(msg) : device.log(msg); };
 
@@ -741,10 +765,11 @@ class UdpSocketServer{
 
 	write(packet, address, port) {
 		if(!this.server) {
-			this.server = udp.createSocket();
+			this.log("Govee UDP socket unavailable; cannot write packet.");
+			return -1;
 		}
 
-		this.server.write(packet, address, port);
+		return this.server.write(packet, address, port);
 	}
 
 	send(packet) {
@@ -766,14 +791,19 @@ class UdpSocketServer{
 			this.server.on('listening', this.onListening.bind(this));
 			this.server.on('connection', this.onConnection.bind(this));
 			this.server.bind(this.listenPort);
-			this.server.connect(this.ipToConnectTo, this.broadcastPort);
+			if(this.connectOnStart){
+				this.server.connect(this.ipToConnectTo, this.broadcastPort);
+			}
 		}
 	};
 
 	stop(){
-		if(this.server) {
-			this.server.disconnect();
+		if(this.server){
+			if(this.connectOnStart){
+				this.server.disconnect();
+			}
 			this.server.close();
+			this.server = null;
 		}
 	}
 
@@ -814,16 +844,15 @@ class UdpSocketServer{
 	};
 	onMessage(msg){
 		this.log('Data received from client');
-		this.log(msg, {pretty: true});
-
-		if(this.isDiscoveryServer) {
-			discovery.forceDiscovery(msg);
-			this.server.close();
-		}
+		this.responseCallbackFunction(msg);
 	};
 	onError(code, message){
 		this.log(`Error: ${code} - ${message}`);
-		this.server.close(); // We're done here
+		if(this.server){
+			this.server.close(); // We're done here
+			this.server = null;
+		}
+		this.log("Govee UDP socket entered a failed state.");
 	};
 }
 
@@ -1050,7 +1079,24 @@ const GoveeDeviceLibrary = {
 		state: 1,
 		supportRazer: true,
 		supportDreamView: true,
-		ledCount: 15
+		ledCount: 0,
+		usesSubDevices: true,
+		subdevices: [
+			{
+				name: "Left Light Bar",
+				ledCount: 5,
+				size: [1, 5],
+				ledNames: ["Led 1", "Led 2", "Led 3", "Led 4", "Led 5"],
+				ledPositions: [[0, 4], [0, 3], [0, 2], [0, 1], [0, 0]],
+			},
+			{
+				name: "Right Light Bar",
+				ledCount: 5,
+				size: [1, 5],
+				ledNames: ["Led 1", "Led 2", "Led 3", "Led 4", "Led 5"],
+				ledPositions: [[0, 4], [0, 3], [0, 2], [0, 1], [0, 0]],
+			},
+		]
 	},
 	H6048: {
 		name: "RGBIC TV Light Bars Pro",
