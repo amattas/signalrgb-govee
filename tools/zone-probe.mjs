@@ -16,6 +16,14 @@ if (!ip) {
 }
 const SLOTS = Number(slotsArg ?? 16);
 const DWELL_MS = Number(dwellArg ?? 2500);
+if (!Number.isInteger(SLOTS) || SLOTS <= 0) {
+	console.error("Error: slots must be a positive integer.");
+	process.exit(1);
+}
+if (!Number.isFinite(DWELL_MS) || DWELL_MS <= 0) {
+	console.error("Error: dwellMs must be a positive number.");
+	process.exit(1);
+}
 const FRAME_MS = 100;
 const PORT = 4003;
 

@@ -19,7 +19,7 @@ All notable changes to this plugin are documented here. The format follows
   spread syntax unsupported by SignalRGB's embedded JavaScript engine, which
   previously caused the plugin to disappear from the device list.
 - **H6047 dual-bar layout.** Gaming Light Bars now appear as separate vertical
-  `Left Light Bar` and `Right Light Bar` subdevices with six independently
+  `Left Light Bar` and `Right Light Bar` subdevices with ten independently
   sampled zones. Slot-by-slot hardware probing showed each bar has ten
   bottom-to-top zones (slots 0-9 left, 10-19 right) and that the firmware
   remaps shorter packets unpredictably, so exactly 20 colors are streamed.
