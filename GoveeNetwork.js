@@ -1082,21 +1082,23 @@ const GoveeDeviceLibrary = {
 		supportDreamView: true,
 		ledCount: 0,
 		usesSubDevices: true,
+		// Zone-probed: the firmware remaps shorter packets unpredictably, so
+		// always stream 20 colors — slots 0-9 run up the left bar, 10-19 up
+		// the right bar.
 		subdevices: [
 			{
 				name: "Left Light Bar",
-				ledCount: 6,
-				size: [1, 6],
-				ledNames: ["Led 1", "Led 2", "Led 3", "Led 4", "Led 5", "Led 6"],
-				ledPositions: [[0, 5], [0, 4], [0, 3], [0, 2], [0, 1], [0, 0]],
+				ledCount: 10,
+				size: [1, 10],
+				ledNames: ["Led 1", "Led 2", "Led 3", "Led 4", "Led 5", "Led 6", "Led 7", "Led 8", "Led 9", "Led 10"],
+				ledPositions: [[0, 9], [0, 8], [0, 7], [0, 6], [0, 5], [0, 4], [0, 3], [0, 2], [0, 1], [0, 0]],
 			},
 			{
 				name: "Right Light Bar",
-				ledCount: 6,
-				size: [1, 6],
-				ledNames: ["Led 1", "Led 2", "Led 3", "Led 4", "Led 5", "Led 6"],
-				// Zones chain serpentine: up the left bar, then down the right bar
-				ledPositions: [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [0, 5]],
+				ledCount: 10,
+				size: [1, 10],
+				ledNames: ["Led 1", "Led 2", "Led 3", "Led 4", "Led 5", "Led 6", "Led 7", "Led 8", "Led 9", "Led 10"],
+				ledPositions: [[0, 9], [0, 8], [0, 7], [0, 6], [0, 5], [0, 4], [0, 3], [0, 2], [0, 1], [0, 0]],
 			},
 		]
 	},
