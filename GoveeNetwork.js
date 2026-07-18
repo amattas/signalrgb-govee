@@ -1085,17 +1085,17 @@ const GoveeDeviceLibrary = {
 		subdevices: [
 			{
 				name: "Left Light Bar",
-				ledCount: 5,
-				size: [1, 5],
-				ledNames: ["Led 1", "Led 2", "Led 3", "Led 4", "Led 5"],
-				ledPositions: [[0, 4], [0, 3], [0, 2], [0, 1], [0, 0]],
+				ledCount: 6,
+				size: [1, 6],
+				ledNames: ["Led 1", "Led 2", "Led 3", "Led 4", "Led 5", "Led 6"],
+				ledPositions: [[0, 5], [0, 4], [0, 3], [0, 2], [0, 1], [0, 0]],
 			},
 			{
 				name: "Right Light Bar",
-				ledCount: 5,
-				size: [1, 5],
-				ledNames: ["Led 1", "Led 2", "Led 3", "Led 4", "Led 5"],
-				ledPositions: [[0, 4], [0, 3], [0, 2], [0, 1], [0, 0]],
+				ledCount: 6,
+				size: [1, 6],
+				ledNames: ["Led 1", "Led 2", "Led 3", "Led 4", "Led 5", "Led 6"],
+				ledPositions: [[0, 5], [0, 4], [0, 3], [0, 2], [0, 1], [0, 0]],
 			},
 		]
 	},

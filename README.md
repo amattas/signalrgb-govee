@@ -26,7 +26,7 @@ Compared to upstream `gitlab.com/signalrgb/Govee main` as of April 2026:
 - **Bug fix: cross-subnet `Check IP` discovery works reliably** with Govee's
   fixed UDP reply port and SignalRGB's raw UDP packet format.
 - **Bug fix: H6047 Gaming Light Bars expose separate left/right bars** with
-  five correctly oriented zones each.
+  six correctly oriented zones each.
 - **Additional SKUs** that have been asked for in forum threads but not yet
   upstreamed:
   - H70BC — Netflix Curtain Lights (20 IC subdevices × 20 LEDs, 400 total)

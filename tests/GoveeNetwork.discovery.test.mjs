@@ -94,7 +94,7 @@ test("plugin source avoids object spread unsupported by SignalRGB", () => {
 	assert.doesNotMatch(source, /\.\.\.value/);
 });
 
-test("H6047 exposes two vertical five-zone light bars", () => {
+test("H6047 exposes two vertical six-zone light bars", () => {
 	const runtime = loadPlugin();
 	const h6047 = runtime.GoveeDeviceLibrary.H6047;
 
@@ -102,9 +102,9 @@ test("H6047 exposes two vertical five-zone light bars", () => {
 	assert.equal(h6047.ledCount, 0);
 	assert.equal(h6047.subdevices.length, 2);
 	assert.deepEqual(Array.from(h6047.subdevices, sd => sd.name), ["Left Light Bar", "Right Light Bar"]);
-	assert.deepEqual(JSON.parse(JSON.stringify(h6047.subdevices.map(sd => sd.size))), [[1, 5], [1, 5]]);
-	assert.deepEqual(JSON.parse(JSON.stringify(h6047.subdevices[0].ledPositions)), [[0, 4], [0, 3], [0, 2], [0, 1], [0, 0]]);
-	assert.deepEqual(JSON.parse(JSON.stringify(h6047.subdevices[1].ledPositions)), [[0, 4], [0, 3], [0, 2], [0, 1], [0, 0]]);
+	assert.deepEqual(JSON.parse(JSON.stringify(h6047.subdevices.map(sd => sd.size))), [[1, 6], [1, 6]]);
+	assert.deepEqual(JSON.parse(JSON.stringify(h6047.subdevices[0].ledPositions)), [[0, 5], [0, 4], [0, 3], [0, 2], [0, 1], [0, 0]]);
+	assert.deepEqual(JSON.parse(JSON.stringify(h6047.subdevices[1].ledPositions)), [[0, 5], [0, 4], [0, 3], [0, 2], [0, 1], [0, 0]]);
 });
 
 test("H6047 flattens left then right protocol zones from bottom to top", () => {
@@ -115,11 +115,13 @@ test("H6047 flattens left then right protocol zones from bottom to top", () => {
 	runtime.setSubdevicesForTest(subdevices);
 
 	assert.deepEqual(Array.from(runtime.GetRGBFromSubdevices()), [
+		10, 0, 5,
 		10, 0, 4,
 		10, 0, 3,
 		10, 0, 2,
 		10, 0, 1,
 		10, 0, 0,
+		20, 0, 5,
 		20, 0, 4,
 		20, 0, 3,
 		20, 0, 2,
