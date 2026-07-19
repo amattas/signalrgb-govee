@@ -19,9 +19,10 @@ All notable changes to this plugin are documented here. The format follows
   spread syntax unsupported by SignalRGB's embedded JavaScript engine, which
   previously caused the plugin to disappear from the device list.
 - **H6047 dual-bar layout.** Gaming Light Bars now appear as separate vertical
-  `Left Light Bar` and `Right Light Bar` subdevices with five independently
-  sampled zones each. Protocol zones are mapped bottom-to-top to match the
-  physical hardware orientation; the non-addressed logo LED is omitted.
+  `Left Light Bar` and `Right Light Bar` subdevices with ten independently
+  sampled zones. Slot-by-slot hardware probing showed each bar has ten
+  bottom-to-top zones (slots 0-9 left, 10-19 right) and that the firmware
+  remaps shorter packets unpredictably, so exactly 20 colors are streamed.
 
 ### Planned — v2.0.0-beta
 - Port [WIZ Network Plugin](https://github.com/RobThePCGuy/SignalRGB-WIZ-Network-Plugin)'s
